@@ -5,36 +5,75 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CardioSense — Heart Disease Predictor</title>
   <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
 </head>
 <body>
 
-  <!-- Neural canvas background -->
   <canvas id="neuralCanvas"></canvas>
 
-  <div class="page-wrapper">
+  <!-- Overlay result screen -->
+  <div class="result-overlay" id="resultOverlay">
+    <div class="result-modal" id="resultModal">
+      <div class="result-bg-anim" id="resultBgAnim"></div>
+      <button class="modal-close" onclick="closeResult()" aria-label="Close">✕</button>
 
-    <!-- Header -->
+      <div class="result-content">
+        <div class="result-icon-wrap" id="resultIconWrap">
+          <div class="icon-ring ring1"></div>
+          <div class="icon-ring ring2"></div>
+          <div class="icon-ring ring3"></div>
+          <div class="heart-icon" id="heartIcon">
+            <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path id="heartPath" d="M32 56S6 40 6 22C6 14 12 8 20 8C25.2 8 29.8 10.8 32 15C34.2 10.8 38.8 8 44 8C52 8 58 14 58 22C58 40 32 56 32 56Z"/>
+              <polyline id="ecgLine" points="10,32 16,32 20,20 24,44 28,28 32,32 36,32" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="result-label" id="resultLabel">ANALYSIS COMPLETE</div>
+        <h1 class="result-title" id="resultTitle"></h1>
+        <p class="result-desc" id="resultDesc"></p>
+
+        <div class="prob-bar-wrap">
+          <div class="prob-bar-track">
+            <div class="prob-bar-fill" id="probBarFill"></div>
+          </div>
+          <div class="prob-bar-labels">
+            <span>Healthy</span>
+            <span id="probText"></span>
+            <span>At Risk</span>
+          </div>
+        </div>
+
+        <div class="result-features" id="resultFeatures"></div>
+
+        <p class="result-disclaimer">⚠ Educational tool only — not a substitute for professional medical advice.</p>
+
+        <button class="btn-reanalyse" onclick="closeResult()">← Re-analyse</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-wrapper">
     <header class="site-header">
       <div class="logo">
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M16 28C16 28 4 20.5 4 12C4 8.13 7.13 5 11 5C13.14 5 15.04 6.03 16 7.67C16.96 6.03 18.86 5 21 5C24.87 5 28 8.13 28 12C28 20.5 16 28 16 28Z" fill="#C0392B" opacity="0.85"/>
-          <path d="M8 13 L11 10 L13 14 L16 8 L19 14 L21 10 L24 13" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+          <path d="M16 28C16 28 4 20.5 4 12C4 8.13 7.13 5 11 5C13.14 5 15.04 6.03 16 7.67C16.96 6.03 18.86 5 21 5C24.87 5 28 8.13 28 12C28 20.5 16 28 16 28Z" fill="#E05C5C"/>
+          <polyline points="7,15 10,15 12,10 14,20 16,13 18,15 25,15" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
         CardioSense
       </div>
-      <span class="header-tag">ML-Powered · Logistic Regression</span>
+      <span class="header-tag">Logistic Regression · UCI Dataset</span>
     </header>
 
-    <!-- Hero -->
     <section class="hero">
-      <p class="eyebrow">Heart Disease Risk Assessment</p>
-      <h1 class="hero-title">Your heart's data,<br /><em>analysed in seconds.</em></h1>
-      <p class="hero-sub">Enter your clinical values below. Our trained model will assess your heart disease risk based on 13 diagnostic features.</p>
+      <p class="eyebrow">Neural Heart Analysis</p>
+      <h1 class="hero-title">Predict heart disease<br /><em>with machine learning.</em></h1>
+      <p class="hero-sub">Enter your 13 clinical values. Our trained model analyses your risk profile and delivers an instant prediction.</p>
     </section>
 
-    <!-- Form Card -->
     <main class="form-card">
+      <div class="form-section-label">Patient Data — 13 Features</div>
       <div class="form-grid">
 
         <div class="field-group">
@@ -76,8 +115,8 @@
           <label for="fbs">Fasting Blood Sugar <span class="unit">&gt;120 mg/dl?</span></label>
           <select id="fbs">
             <option value="" disabled selected>Select</option>
-            <option value="1">Yes (1)</option>
-            <option value="0">No (0)</option>
+            <option value="1">Yes</option>
+            <option value="0">No</option>
           </select>
         </div>
 
@@ -86,13 +125,13 @@
           <select id="restecg">
             <option value="" disabled selected>Select</option>
             <option value="0">Normal (0)</option>
-            <option value="1">ST-T Wave Abnormality (1)</option>
-            <option value="2">Left Ventricular Hypertrophy (2)</option>
+            <option value="1">ST-T Abnormality (1)</option>
+            <option value="2">LV Hypertrophy (2)</option>
           </select>
         </div>
 
         <div class="field-group">
-          <label for="thalach">Max Heart Rate Achieved <span class="unit">bpm</span></label>
+          <label for="thalach">Max Heart Rate <span class="unit">bpm</span></label>
           <input type="number" id="thalach" min="60" max="220" placeholder="e.g. 150" />
         </div>
 
@@ -100,8 +139,8 @@
           <label for="exang">Exercise Induced Angina</label>
           <select id="exang">
             <option value="" disabled selected>Select</option>
-            <option value="1">Yes (1)</option>
-            <option value="0">No (0)</option>
+            <option value="1">Yes</option>
+            <option value="0">No</option>
           </select>
         </div>
 
@@ -111,7 +150,7 @@
         </div>
 
         <div class="field-group">
-          <label for="slope">Slope of Peak ST Segment</label>
+          <label for="slope">Peak ST Slope</label>
           <select id="slope">
             <option value="" disabled selected>Select</option>
             <option value="0">Upsloping (0)</option>
@@ -140,33 +179,16 @@
 
       <div class="actions">
         <button class="btn-predict" id="predictBtn" onclick="predict()">
-          <span class="btn-icon">⚡</span> Analyse Heart Data
+          <span class="btn-pulse"></span>
+          <span class="btn-text">Run Prediction</span>
         </button>
-        <button class="btn-reset" onclick="resetForm()">Reset</button>
+        <button class="btn-reset" onclick="resetForm()">Clear</button>
       </div>
-
-      <!-- Result Panel -->
-      <div class="result-panel" id="resultPanel">
-        <div class="result-inner" id="resultInner">
-          <div class="result-icon" id="resultIcon"></div>
-          <div class="result-text">
-            <h2 id="resultTitle"></h2>
-            <p id="resultDesc"></p>
-          </div>
-        </div>
-        <div class="result-disclaimer">
-          ⚠ This tool is for educational purposes only. Always consult a qualified physician for medical advice.
-        </div>
-      </div>
-
     </main>
 
-    <!-- Footer -->
     <footer class="site-footer">
-      <p>Built with Logistic Regression · Scikit-learn · Dataset: UCI Heart Disease</p>
-      <p>Model accuracy ~85% on test data</p>
+      <p>Built with Logistic Regression · Scikit-learn · UCI Heart Disease Dataset · ~85% test accuracy</p>
     </footer>
-
   </div>
 
   <script src="script.js"></script>
