@@ -362,8 +362,3 @@ for i, (lr, knn) in enumerate(zip(lr_scores, knn_scores)):
 
 plt.tight_layout()
 plt.show()
-
-
-
-
-
